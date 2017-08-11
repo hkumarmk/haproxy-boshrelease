@@ -1,0 +1,51 @@
+name: haproxy
+instance_groups:
+  - name: default
+    azs: [z1]
+    instances: 1
+    vm_type: default
+    stemcell: ubuntu
+    jobs:
+      - name: haproxy
+        release: haproxy
+    networks:
+    - name: default
+#      static_ips: (( static_ips(0, 1, 2, 3, 4) ))
+
+releases:
+  - name: haproxy
+    version: latest
+
+stemcells:
+  - alias: ubuntu
+    os: ubuntu-trusty
+    version: latest
+
+update:
+  canaries: 1
+  max_in_flight: 1
+  canary_watch_time: 30000-60000
+  update_watch_time: 5000-60000
+  serial: false
+
+properties:
+  keepalived: ~
+  ha_proxy:
+    internal_only_domains: []
+    tcp:
+      - name: wss        # required - name of backend
+        port: 443       # required - port haproxy should listen on
+        backend_servers: # required - list of backend IPs to connect to
+        - 10.244.0.5
+        - 10.244.0.6
+        backup_servers:
+        - 10.244.0.7
+        balance: roundrobin # optional - sets algorithm used to select a server when doing load balancing
+        backend_port: 443 # optional - sets backend port - otherwise defaults to `port`
+#        ssl: true        # optional - enables ssl, and uses the `ha_proxy.ssl_pem` provided key
+#        backend_ssl: "verify"  # optional - enables ssl backend, one of `verify`, `noverify`, any other value assumes no ssl backend.
+                               # Setting `verify` requires `ha_proxy.backend_ca_file` key to be set.
+        backend_verifyhost: example.com # optional - hostname to verify in the x509 certificate subject for SSL-enabled backend servers
+                                        # only used if backend_ssl: `verify` is set
+        health_check_http: 4444 # optional port number - if provided a heath check http site is created at `haproxy_ip:4444/health`.
+                                # It shows `200 OK` if >0 backend servers are up.

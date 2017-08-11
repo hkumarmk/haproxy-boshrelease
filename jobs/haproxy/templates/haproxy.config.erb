@@ -371,6 +371,17 @@ end %>
         <% end -%>
   <% end -%>
 
+  <% tcp_proxy["backup_servers"].each_with_index do |ip, index| %>
+        server node<%= index %> <%= ip %>:<%= backend_port %> <% if_p("ha_proxy.resolvers") do -%>
+        resolvers default <% end -%> check inter 1000 backup <% if tcp_proxy["backend_ssl"] then -%>
+           <% if tcp_proxy["backend_ssl"].downcase == "verify" then -%>
+             ssl verify required ca-file /var/vcap/jobs/haproxy/config/backend-ca-certs.pem <% if tcp_proxy["backend_verifyhost"] then -%>
+             verifyhost <%= tcp_proxy["backend_verifyhost"] %> <% end -%>
+           <% elsif tcp_proxy["backend_ssl"].downcase == "noverify" then -%>
+             ssl verify none <% end -%>
+        <% end -%>
+  <% end -%>
+
   <% if tcp_proxy["health_check_http"] then %>
 listen health_check_http_tcp-<%= tcp_proxy["name"] %>
     bind :<%= tcp_proxy["health_check_http"] %>
